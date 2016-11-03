@@ -8,7 +8,7 @@ yarn run build
 cp package.json bundle/
 cd bundle
 # install prod dependencies
-yarn --production
+npm install --production
 #Zip bundle files
 zip -qr bundle.zip .
 mv bundle.zip ../
