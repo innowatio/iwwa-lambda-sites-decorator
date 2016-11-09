@@ -114,6 +114,7 @@ describe("Handle kinesis answer event", async () => {
 
             expect(sensor.employees).to.be.deep.equal("11-49");
             expect(sensor.businessType).to.be.equal(undefined);
+            expect(sensor.areaInMq).to.equal(undefined);
         });
 
         it("Update businessType info", async () => {
@@ -142,9 +143,9 @@ describe("Handle kinesis answer event", async () => {
             const sensor = await db.collection(SITES_COLLECTION).findOne(
                 { _id: "32" }
             );
-
             expect(sensor.businessType).to.be.equal("Industria (costruzioni, manifatturiera, agricoltura)");
             expect(sensor.employees).to.be.deep.equal(undefined);
+            expect(sensor.areaInMq).to.equal(undefined);
         });
 
         it("Update both businessType and employees info", async () => {
@@ -179,6 +180,39 @@ describe("Handle kinesis answer event", async () => {
 
             expect(sensor.employees).to.be.deep.equal("11-49");
             expect(sensor.businessType).to.be.equal("Industria (costruzioni, manifatturiera, agricoltura)");
+            expect(sensor.areaInMq).to.equal(undefined);
         });
+
+        it("Update areaInMq info", async () => {
+            const event = getEventFromObject({
+                id: "eventId",
+                data: {
+                    element: {
+                        answers: [{
+                            id: 1,
+                            answer: "meno di 75",
+                        }],
+                        siteId: "32",
+                        category: "building",
+                    },
+                    id: v4()
+                },
+                type: "element inserted in collection answers"
+            });
+
+            await handler(event, context);
+            expect(context.succeed).to.have.been.calledOnce;
+
+            const sites = await db.collection(SITES_COLLECTION).find({}).toArray();
+            expect(sites).to.not.be.empty;
+
+            const sensor = await db.collection(SITES_COLLECTION).findOne(
+                {_id: "32"}
+            );
+            expect(sensor.areaInMq).to.equal("meno di 75");
+            expect(sensor.employees).to.be.deep.equal(undefined);
+            expect(sensor.businessType).to.be.equal(undefined);
+        });
+
     });
 });
