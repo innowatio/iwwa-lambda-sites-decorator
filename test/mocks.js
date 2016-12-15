@@ -1,4 +1,4 @@
-function objectToBase64 (object) {
+function objectToBase64(object) {
     return new Buffer(JSON.stringify(object)).toString("base64");
 }
 
@@ -20,12 +20,26 @@ export function getRecordFromObject (object) {
     };
 }
 
-export function getEventFromArray (array) {
+export function getEventFromArray(array) {
     return {
         "Records": array.map(getRecordFromObject)
     };
 }
 
-export function getEventFromObject (object) {
+export function getEventFromObject(object) {
     return getEventFromArray([object]);
+}
+
+export function getApiResponse(latitude, longitude) {
+    return {
+        results: [{
+            geometry: {
+                location: {
+                    lat: latitude,
+                    lng: longitude
+                }
+            }
+        }],
+        status: "OK"
+    };
 }

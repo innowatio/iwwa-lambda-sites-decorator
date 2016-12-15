@@ -1,24 +1,23 @@
-import log from "./services/logger";
+import log from "../services/logger";
 
-import {decorateSite} from "./steps/decorate-site";
+import {decorateSite} from "../steps/decorate-site";
 
-export default async function pipeline(event) {
+export async function decorateDemographics(event) {
 
-    log.info(event, "event");
-
-    const rawReading = event.data.element;
-    if (!rawReading ||
-        !rawReading.category === "demographics" ||
-        !rawReading.category === "building" ||
-        !rawReading.answers) {
+    const answer = event.data.element;
+    if (!answer ||
+        !answer.category === "demographics" ||
+        !answer.category === "building" ||
+        !answer.answers) {
         return null;
     }
 
+    log.info(event, "event");
     let siteInfos = {};
 
-    switch (rawReading.category) {
+    switch (answer.category) {
         case "demographics": {
-            const employeesNumberAnswer = rawReading.answers.find(x => x.id === 1);
+            const employeesNumberAnswer = answer.answers.find(x => x.id === 1);
             if (employeesNumberAnswer) {
                 siteInfos = {
                     ...siteInfos,
@@ -26,7 +25,7 @@ export default async function pipeline(event) {
                 };
             }
 
-            const businessTypeAnswer = rawReading.answers.find(x => x.id === 2);
+            const businessTypeAnswer = answer.answers.find(x => x.id === 2);
             if (businessTypeAnswer) {
                 siteInfos = {
                     ...siteInfos,
@@ -36,7 +35,7 @@ export default async function pipeline(event) {
             break;
         }
         case "building": {
-            const areaInMqAnswers = rawReading.answers.find(x => x.id === 1);
+            const areaInMqAnswers = answer.answers.find(x => x.id === 1);
             if (areaInMqAnswers) {
                 siteInfos = {
                     ...siteInfos,
@@ -46,7 +45,5 @@ export default async function pipeline(event) {
         }
     }
 
-
-
-    await decorateSite(rawReading.siteId, siteInfos);
+    await decorateSite(answer.siteId, siteInfos);
 }

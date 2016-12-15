@@ -11,7 +11,7 @@
         "comma-spacing": [2, {"before": false, "after": true}],
         "computed-property-spacing": [2, "never"],
         "dot-notation": [0],
-        "indent": [2, 4],
+        "indent": [2, 4, {"SwitchCase": 1}],
         "linebreak-style": [2, "unix"],
         "new-cap": [2, {"capIsNew": false}],
         "no-alert": [0],

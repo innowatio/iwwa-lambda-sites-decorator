@@ -1,7 +1,10 @@
 import "babel-polyfill";
 import router from "kinesis-router";
 
-import pipeline from "./pipeline";
+import {decorateDemographics} from "./decorations/on-answers";
+import {decorateGeolocation} from "./decorations/on-sites";
 
 export const handler = router()
-    .on("element inserted in collection answers", pipeline);
+    .on("element inserted in collection sites", decorateGeolocation)
+    .on("element replaced in collection sites", decorateGeolocation)
+    .on("element inserted in collection answers", decorateDemographics);
