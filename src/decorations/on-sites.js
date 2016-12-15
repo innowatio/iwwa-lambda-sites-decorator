@@ -16,12 +16,20 @@ export async function decorateGeolocation(event) {
 
         log.info({event});
 
+        const infos = [
+            site.address,
+            site.province,
+            site.city,
+            site.country
+        ].filter(x => x).reduce((current, state) => `${current} ${state}`);
+
         log.debug({
             site,
-            id
+            id,
+            infos
         });
 
-        const geocoordinates = await getGeocoordinates(`${site.address} ${site.province} ${site.city} ${site.country}`);
+        const geocoordinates = await getGeocoordinates(infos);
 
         log.debug({
             geocoordinates
