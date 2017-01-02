@@ -104,13 +104,17 @@ describe("Handle kinesis event", async () => {
     });
 
     it("Fail on malformed event", async () => {
-        const failEvent = getEventFromObject({
+        const failEvents = ["sites", "readings"].map(event => getEventFromObject({
             id: "eventId",
-            type: "element inserted in collection sites"
-        });
+            type: `element inserted in collection ${event}`
+        }));
 
-        await handler(failEvent, context);
-        expect(context.fail).to.have.been.calledOnce;
+        for (var index = 0; index < failEvents.length; index++) {
+            var failEvent = failEvents[index];
+            await handler(failEvent, context);
+        }
+
+        expect(context.fail).to.have.been.calledTwice;
     });
 
     describe("Decorate sites", () => {
@@ -318,5 +322,142 @@ describe("Handle kinesis event", async () => {
 
         });
 
+        describe("On readings events", () => {
+
+            const site = {
+                _id: "siteId-0",
+                sensorsIds: [
+                    "sensorId-0",
+                    "sensorId-1",
+                    "sensorId-2"
+                ]
+            };
+
+            beforeEach(async () => {
+                await db.collection(SITES_COLLECTION).insert(site);
+            });
+
+            afterEach(async () => {
+                await db.collection(SITES_COLLECTION).remove({
+                    _id: site._id
+                });
+            });
+
+            it("Ignore reading not in any site", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-3",
+                            date: "2017-01-01T11:00:15.500Z",
+                            source: "reading",
+                            measurements: [{
+                                type: "activeEnergy",
+                                value: 1,
+                                unitOfMeasurement: "kWh"
+                            }]
+                        }
+                    },
+                    type: "element inserted in collection readings"
+                });
+
+                await handler(event, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledOnce;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site
+                });
+            });
+
+            it("Update lastUpdate value on site", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1",
+                            date: "2017-01-01T11:00:15.500Z",
+                            source: "reading",
+                            measurements: [{
+                                type: "activeEnergy",
+                                value: 1,
+                                unitOfMeasurement: "kWh"
+                            }]
+                        }
+                    },
+                    type: "element inserted in collection readings"
+                });
+
+                await handler(event, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledOnce;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site,
+                    lastUpdate: 1483268415500
+                });
+            });
+
+            it("Ignore older reading", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1",
+                            date: "2017-01-01T11:00:15.500Z",
+                            source: "reading",
+                            measurements: [{
+                                type: "activeEnergy",
+                                value: 1,
+                                unitOfMeasurement: "kWh"
+                            }]
+                        }
+                    },
+                    type: "element inserted in collection readings"
+                });
+
+                await handler(event, context);
+
+                const oldEvent = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1",
+                            date: "2017-01-01T11:00:14.500Z",
+                            source: "reading",
+                            measurements: [{
+                                type: "activeEnergy",
+                                value: 1,
+                                unitOfMeasurement: "kWh"
+                            }]
+                        }
+                    },
+                    type: "element inserted in collection readings"
+                });
+
+                await handler(oldEvent, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledTwice;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site,
+                    lastUpdate: 1483268415500
+                });
+            });
+
+        });
     });
 });

@@ -14,6 +14,11 @@ export async function getMongoClient () {
     return dbInstance;
 }
 
+export async function retrieveSites(query) {
+    const db = await getMongoClient();
+    return await db.collection(SITES_COLLECTION).find(query).toArray();
+}
+
 export async function upsertSite(id, site) {
     const db = await getMongoClient();
     await db.collection(SITES_COLLECTION).updateOne(
