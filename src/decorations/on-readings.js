@@ -15,7 +15,7 @@ export async function decorateLastUpdate(event) {
             return null;
         }
 
-        log.info({event});
+        log.debug({event});
 
         const sites = await retrieveSites({
             sensorsIds: reading.sensorId
