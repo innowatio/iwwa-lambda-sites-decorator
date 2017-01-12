@@ -402,7 +402,8 @@ describe("Handle kinesis event", async () => {
                 expect(context.succeed).to.have.been.calledOnce;
                 expect(siteSaved).to.be.deep.equal({
                     ...site,
-                    lastUpdate: 1483268415500
+                    lastUpdate: 1483268415500,
+                    status: {}
                 });
             });
 
@@ -454,7 +455,8 @@ describe("Handle kinesis event", async () => {
                 expect(context.succeed).to.have.been.calledTwice;
                 expect(siteSaved).to.be.deep.equal({
                     ...site,
-                    lastUpdate: 1483268415500
+                    lastUpdate: 1483268415500,
+                    status: {}
                 });
             });
 

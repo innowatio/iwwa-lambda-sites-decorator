@@ -1,4 +1,4 @@
-import log from "../services/logger";
+import {log} from "../services/logger";
 
 import {decorateSite} from "../steps/decorate-site";
 
