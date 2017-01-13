@@ -5,7 +5,7 @@ import {decorateAlarmsStatus} from "./decorations/on-alarms";
 import {decorateDemographics} from "./decorations/on-answers";
 import {decorateGeolocation} from "./decorations/on-sites";
 import {decorateSiteStatus} from "./decorations/on-readings";
-import {updateAlarmsStatus} from "./decorations/on-alarms-aggregates";
+import {updateAlarmsStatus} from "./decorations/on-alarm-triggered";
 
 export const handler = router()
     /*
