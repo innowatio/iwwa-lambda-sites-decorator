@@ -8,7 +8,7 @@ import {decorateSite} from "../steps/decorate-site";
 import {getComfortStatus} from "./on-readings/get-comfort-status";
 import {getTelecontrolStatus} from "./on-readings/get-telecontrol-status";
 
-export async function decorateLastUpdate(event) {
+export async function decorateSiteStatus(event) {
 
     try {
         const reading = event.data.element;

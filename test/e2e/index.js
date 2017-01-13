@@ -461,5 +461,244 @@ describe("Handle kinesis event", async () => {
             });
 
         });
+
+        let clock;
+
+        describe("On alarms event", () => {
+
+            const site = {
+                _id: "siteId-0",
+                sensorsIds: [
+                    "sensorId-0",
+                    "sensorId-1",
+                    "sensorId-2"
+                ]
+            };
+
+            before(() => {
+                clock = sinon.useFakeTimers();
+            });
+
+            after(() => {
+                clock.restore();
+            });
+
+            beforeEach(async () => {
+                await db.collection(SITES_COLLECTION).insert(site);
+            });
+
+            afterEach(async () => {
+                await db.collection(SITES_COLLECTION).remove({
+                    _id: site._id
+                });
+            });
+
+            it("Update site status with new value", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1"
+                        }
+                    },
+                    type: "element inserted in collection alarms"
+                });
+
+                await handler(event, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledOnce;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site,
+                    status: {
+                        alarms: {
+                            time: 0,
+                            value: "active"
+                        }
+                    }
+                });
+            });
+
+            it("Update site status with older value", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1"
+                        }
+                    },
+                    type: "element inserted in collection alarms"
+                });
+
+                await db.collection(SITES_COLLECTION).updateOne({
+                    _id: site._id
+                }, {
+                    ...site,
+                    status: {
+                        alarms: {
+                            time: 0,
+                            value: "error"
+                        }
+                    }
+                });
+
+                await handler(event, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledOnce;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site,
+                    status: {
+                        alarms: {
+                            time: 0,
+                            value: "error"
+                        }
+                    }
+                });
+            });
+
+        });
+
+        describe("On alarm-triggered event", () => {
+
+            const site = {
+                _id: "siteId-0",
+                sensorsIds: [
+                    "sensorId-0",
+                    "sensorId-1",
+                    "sensorId-2"
+                ]
+            };
+
+            before(() => {
+                clock = sinon.useFakeTimers();
+            });
+
+            after(() => {
+                clock.restore();
+            });
+
+            beforeEach(async () => {
+                await db.collection(SITES_COLLECTION).insert(site);
+            });
+
+            afterEach(async () => {
+                await db.collection(SITES_COLLECTION).remove({
+                    _id: site._id
+                });
+            });
+
+            it("Update site status with updated alarm value", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1",
+                            date: "1970-01-01T00:00:00.500Z",
+                            count: {
+                                day: 5,
+                                night: 10
+                            }
+                        }
+                    },
+                    type: "element inserted in collection alarm-triggered"
+                });
+
+                await handler(event, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledOnce;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site,
+                    status: {
+                        alarms: {
+                            time: 500,
+                            value: "error",
+                            count: {
+                                day: 5,
+                                night: 10
+                            }
+                        }
+                    }
+                });
+            });
+
+            it("Ignore old alarm trigger", async () => {
+                const event = getEventFromObject({
+                    id: v4(),
+                    data: {
+                        id: v4(),
+                        element: {
+                            sensorId: "sensorId-1",
+                            date: "1970-01-01T00:00:00.000Z",
+                            count: {
+                                day: 5,
+                                night: 10
+                            }
+                        }
+                    },
+                    type: "element inserted in collection alarm-triggered"
+                });
+
+                await db.collection(SITES_COLLECTION).updateOne({
+                    _id: site._id
+                }, {
+                    ...site,
+                    status: {
+                        comfort: {
+                            time: 500,
+                            value: "active"
+                        },
+                        alarms: {
+                            value: "error",
+                            time: 1500,
+                            count: {
+                                day: 6,
+                                night: 11
+                            }
+                        }
+                    }
+                });
+
+                await handler(event, context);
+
+                const siteSaved = await db.collection(SITES_COLLECTION).findOne({
+                    _id: site._id
+                });
+
+                expect(context.succeed).to.have.been.calledOnce;
+                expect(siteSaved).to.be.deep.equal({
+                    ...site,
+                    status: {
+                        comfort: {
+                            time: 500,
+                            value: "active"
+                        },
+                        alarms: {
+                            time: 1500,
+                            value: "error",
+                            count: {
+                                day: 6,
+                                night: 11
+                            }
+                        }
+                    }
+                });
+            });
+
+
+        });
     });
 });
