@@ -10,6 +10,8 @@ export async function updateAlarmsStatus(event) {
 
     try {
 
+        log.debug({event});
+
         const alarm = event.data.element;
         if (!alarm ||
             !alarm.sensorId ||
@@ -24,8 +26,6 @@ export async function updateAlarmsStatus(event) {
         if (!alarmDate.isSame(moment.utc(), "day")) {
             return;
         }
-
-        log.debug({event});
 
         const sites = await retrieveSites({
             sensorsIds: alarm.sensorId
