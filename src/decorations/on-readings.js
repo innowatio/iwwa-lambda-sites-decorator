@@ -51,7 +51,7 @@ export async function decorateSiteStatus(event) {
                 status
             });
 
-            if (lastUpdate) {
+            if (lastUpdate || telecontrol || comfort) {
                 await decorateSite(site._id, {
                     lastUpdate: readingTime,
                     status
