@@ -18,6 +18,12 @@ export function getStatus(reading, site, statusType, statusMapper = defaultMappi
     const readingMillis = readingTime.valueOf();
 
     const lastUpdate = get(site, `status.${statusType}.time`, 0);
+    log.debug({
+        lastUpdate,
+        statusType,
+        result: readingMillis < lastUpdate
+    });
+
     if (readingMillis < lastUpdate) {
         return;
     }
